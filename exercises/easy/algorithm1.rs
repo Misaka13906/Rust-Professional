@@ -7,14 +7,16 @@
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
 use std::vec::*;
+use std::clone::Clone;
+use std::cmp::PartialOrd;
 
 #[derive(Debug)]
-struct Node<T> {
+struct Node<T: std::cmp::PartialOrd + Clone + Display> {
     val: T,
     next: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Node<T> {
+impl<T: PartialOrd + Clone + Display> Node<T> {
     fn new(t: T) -> Node<T> {
         Node {
             val: t,
@@ -22,20 +24,30 @@ impl<T> Node<T> {
         }
     }
 }
+
+impl<T: PartialOrd + Clone + Display> Clone for Node<T> {
+    fn clone(&self) -> Node<T> {
+        Node {
+            val: self.val.clone(),
+            next: self.next,
+        }
+    }
+}
+
 #[derive(Debug)]
-struct LinkedList<T> {
+struct LinkedList<T: PartialOrd + Clone + Display> {
     length: u32,
     start: Option<NonNull<Node<T>>>,
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T: PartialOrd + Clone + Display> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: PartialOrd + Clone + Display> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -71,18 +83,69 @@ impl<T> LinkedList<T> {
     }
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
 	{
-		//TODO
-		Self {
+        if list_a.length == 0 {
+            return list_b;
+        }
+        if list_b.length == 0 {
+            return list_a;
+        }
+		let mut res = Self {
             length: 0,
             start: None,
             end: None,
+        };
+        let mut ptr_a = list_a.start;
+        let mut ptr_b = list_b.start;
+        unsafe {
+            // 已保证都是非空
+            let mut now_a = (*ptr_a.unwrap().as_ptr()).clone();
+            let mut now_b = (*ptr_b.unwrap().as_ptr()).clone();
+            while ptr_a != None && ptr_b != None {
+                now_a = (*ptr_a.unwrap().as_ptr()).clone();
+                now_b = (*ptr_b.unwrap().as_ptr()).clone();
+                let mut flag_a = false;
+                let mut flag_b = false;
+                while ptr_a != None && now_a.val <= now_b.val {
+                    res.add(now_a.val.clone());
+                    ptr_a = now_a.next;
+                    if ptr_a == None {
+                        break;
+                    }
+                    now_a = (*ptr_a.unwrap().as_ptr()).clone();
+                    flag_a = true;
+                }
+                while ptr_b != None && now_b.val <= now_a.val {
+                    res.add(now_b.val.clone());
+                    ptr_b = now_b.next;
+                    if ptr_b == None {
+                        break;
+                    }
+                    now_b = (*ptr_b.unwrap().as_ptr()).clone();
+                    flag_b = true;
+                }
+            }
         }
+        unsafe {
+            let mut now_a = (*list_a.start.unwrap().as_ptr()).clone();
+            let mut now_b = (*list_b.start.unwrap().as_ptr()).clone();
+            while ptr_a != None {
+                now_a = (*ptr_a.unwrap().as_ptr()).clone();
+                res.add(now_a.val.clone());
+                ptr_a = now_a.next;
+            }
+            while ptr_b != None {
+                now_b = (*ptr_b.unwrap().as_ptr()).clone();
+                res.add(now_b.val.clone());
+                ptr_b = now_b.next;
+            }
+        }
+        res
 	}
 }
 
 impl<T> Display for LinkedList<T>
 where
-    T: Display,
+    T: Display + PartialOrd + Clone,
 {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self.start {
@@ -94,7 +157,7 @@ where
 
 impl<T> Display for Node<T>
 where
-    T: Display,
+    T: Display + PartialOrd + Clone,
 {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self.next {

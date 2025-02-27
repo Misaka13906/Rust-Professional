@@ -6,11 +6,13 @@
 
 use std::cmp::Ord;
 use std::default::Default;
+use std::clone::Clone;
 
 pub struct Heap<T>
 where
     T: Default,
 {
+    now: usize,
     count: usize,
     items: Vec<T>,
     comparator: fn(&T, &T) -> bool,
@@ -22,6 +24,7 @@ where
 {
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
+            now: 0,
             count: 0,
             items: vec![T::default()],
             comparator,
@@ -37,7 +40,22 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.items.push(value);
+        self.count += 1;
+        if self.count == 1 {
+            return;
+        }
+        let mut now = self.len();
+        while now > 1 && (self.comparator)(&self.items[now], &self.items[self.parent_idx(now)]) {
+            let parent = self.parent_idx(now);
+            self.items.swap(now, parent);
+            now = parent;
+        }
+        // 没看懂题意迭代器要咋样，这里写的方案是：
+        // 如果新节点打乱了迭代器之前遍历过的，就从头开始
+        if now <= self.now {
+            self.now = 0;
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -79,13 +97,16 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default + Clone,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.now == self.len() {
+            return None;
+        }
+        self.now += 1;
+        Some(self.items[self.now].clone())
     }
 }
 

@@ -27,10 +27,22 @@ impl Graph {
 
     // Perform a breadth-first search on the graph, return the order of visited nodes
     fn bfs_with_return(&self, start: usize) -> Vec<usize> {
-        
-		//TODO
-
+        let mut visited = std::collections::HashSet::new();
         let mut visit_order = vec![];
+        visited.insert(start);
+        visit_order.push(start);
+        let mut l = 0;
+        let mut r = 1;
+        while l < r {
+            l += 1;
+            for vertice in &(*self).adj[visit_order[l-1]] {
+                if visited.get(vertice).is_none() {
+                    r += 1;
+                    visited.insert(*vertice);
+                    visit_order.push(*vertice);
+                }
+            }
+        }
         visit_order
     }
 }

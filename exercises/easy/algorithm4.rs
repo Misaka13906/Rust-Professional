@@ -6,12 +6,13 @@
 
 use std::cmp::Ordering;
 use std::fmt::Debug;
-
+use std::clone::Clone;
 
 #[derive(Debug)]
+#[derive(Clone)]
 struct TreeNode<T>
 where
-    T: Ord,
+    T: Ord + Clone,
 {
     value: T,
     left: Option<Box<TreeNode<T>>>,
@@ -21,14 +22,14 @@ where
 #[derive(Debug)]
 struct BinarySearchTree<T>
 where
-    T: Ord,
+    T: Ord + Clone,
 {
     root: Option<Box<TreeNode<T>>>,
 }
 
 impl<T> TreeNode<T>
 where
-    T: Ord,
+    T: Ord + Clone,
 {
     fn new(value: T) -> Self {
         TreeNode {
@@ -41,32 +42,68 @@ where
 
 impl<T> BinarySearchTree<T>
 where
-    T: Ord,
+    T: Ord + Clone,
 {
 
     fn new() -> Self {
         BinarySearchTree { root: None }
     }
 
+    fn dfs_insert(now: &mut Box<TreeNode<T>>, value: &T) {
+        if *value < now.value {
+            if now.left.is_some() {
+                Self::dfs_insert(now.left.as_mut().unwrap(), value);
+            } else {
+                now.left = Some(Box::new(TreeNode::new(value.clone())));
+            }
+        }
+        if *value > now.value {
+            if now.right.is_some() {
+                Self::dfs_insert(now.right.as_mut().unwrap(), value);
+            } else {
+                now.right = Some(Box::new(TreeNode::new(value.clone())));
+            }
+        }
+    }
+
     // Insert a value into the BST
     fn insert(&mut self, value: T) {
-        //TODO
+        if self.root.is_none() {
+            self.root = Some(Box::new(TreeNode::new(value.clone())));
+            return;
+        }
+        Self::dfs_insert(self.root.as_mut().unwrap(), &value);
+    }
+
+    fn dfs(now: TreeNode<T>, value: &T) -> bool {
+        if *value == now.value {
+            return true;
+        }
+        if *value < now.value && now.left.is_some() {
+            return Self::dfs(*now.left.unwrap(), value);
+        }
+        if *value > now.value && now.right.is_some() {
+            return Self::dfs(*now.right.unwrap(), value);
+        }
+        return false;
     }
 
     // Search for a value in the BST
     fn search(&self, value: T) -> bool {
-        //TODO
-        true
+        if self.root.is_none() {
+            return false;
+        }
+        return Self::dfs(*self.root.clone().unwrap(), &value);
     }
 }
 
 impl<T> TreeNode<T>
 where
-    T: Ord,
+    T: Ord + Clone,
 {
     // Insert a node into the tree
     fn insert(&mut self, value: T) {
-        //TODO
+        // unused
     }
 }
 

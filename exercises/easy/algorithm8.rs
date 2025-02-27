@@ -3,6 +3,9 @@
 	This question requires you to use queues to implement the functionality of the stac
 */
 
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::ops::{Deref, DerefMut};
 
 #[derive(Debug)]
 pub struct Queue<T> {
@@ -54,28 +57,38 @@ impl<T> Default for Queue<T> {
 
 pub struct myStack<T>
 {
-	//TODO
-	q1:Queue<T>,
-	q2:Queue<T>
+	now:Rc<RefCell<Queue<T>>>,
+	other:Rc<RefCell<Queue<T>>>,
+	// q1:Queue<T>,
+	// q2:Queue<T>
 }
-impl<T> myStack<T> {
+impl<T: std::fmt::Debug> myStack<T> {
     pub fn new() -> Self {
-        Self {
-			//TODO
-			q1:Queue::<T>::new(),
-			q2:Queue::<T>::new()
-        }
+        let mut res = Self {
+			now: Rc::new(RefCell::new(Queue::<T>::new())),
+            other: Rc::new(RefCell::new(Queue::<T>::new())),
+			// q1: Queue::<T>::new(),
+			// q2: Queue::<T>::new(),
+        };
+        // res.now = Rc::new(RefCell::new(res.q1));
+        // res.other = Rc::new(RefCell::new(res.q2));
+        res
     }
     pub fn push(&mut self, elem: T) {
-        //TODO
+        self.now.borrow_mut().deref_mut().enqueue(elem);
     }
     pub fn pop(&mut self) -> Result<T, &str> {
-        //TODO
-		Err("Stack is empty")
+        if self.is_empty() {
+            return Err("Stack is empty");
+        }
+        while self.now.borrow().deref().size() > 1 {
+            self.other.borrow_mut().deref_mut().enqueue(self.now.borrow_mut().deref_mut().dequeue().unwrap());
+        }
+        std::mem::swap(&mut self.now, &mut self.other);
+		Ok(self.other.borrow_mut().deref_mut().dequeue().unwrap())
     }
     pub fn is_empty(&self) -> bool {
-		//TODO
-        true
+		self.now.borrow().deref().is_empty()
     }
 }
 

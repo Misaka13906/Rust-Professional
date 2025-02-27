@@ -7,6 +7,7 @@
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
 use std::vec::*;
+use std::clone::Clone;
 
 #[derive(Debug)]
 struct Node<T> {
@@ -15,7 +16,7 @@ struct Node<T> {
     prev: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Node<T> {
+impl<T: Clone + Display> Node<T> {
     fn new(t: T) -> Node<T> {
         Node {
             val: t,
@@ -24,6 +25,17 @@ impl<T> Node<T> {
         }
     }
 }
+
+impl<T: Clone + Display> Clone for Node<T> {
+    fn clone(&self) -> Node<T> {
+        Node {
+            val: self.val.clone(),
+            prev: self.prev,
+            next: self.next,
+        }
+    }
+}
+
 #[derive(Debug)]
 struct LinkedList<T> {
     length: u32,
@@ -31,13 +43,13 @@ struct LinkedList<T> {
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T: Clone + Display> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: Clone + Display> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -73,7 +85,27 @@ impl<T> LinkedList<T> {
         }
     }
 	pub fn reverse(&mut self){
-		// TODO
+        if self.length == 0 {
+            return;
+        }
+		unsafe {
+            let mut ptr = self.start;
+            let mut now = &mut (*ptr.unwrap().as_ptr());
+            while ptr != None {
+                now = &mut (*ptr.unwrap().as_ptr());
+                std::mem::swap(&mut now.prev, &mut now.next);
+                ptr = now.prev;
+            }
+            /////// or using this: ////////
+            // let mut now = ptr.unwrap().as_ptr();
+            // while ptr != None {
+            //     now = ptr.unwrap().as_ptr();
+            //     std::mem::swap(&mut (*now).prev, &mut (*now).next);
+            //     ptr = (*now).prev;
+            // }
+            ///////////////////////////////
+        }
+        std::mem::swap(&mut self.start, &mut self.end);
 	}
 }
 

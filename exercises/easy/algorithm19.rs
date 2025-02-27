@@ -11,9 +11,30 @@
 
 use std::fmt::{self, Display, Formatter};
 
+type matrix22 = ((i32, i32), (i32, i32));
+fn multiply(a: matrix22, b: matrix22) -> matrix22 {
+    (
+        (a.0.0 * b.0.0 + a.0.1 * b.1.0, a.0.0 * b.0.1 + a.0.1 * b.1.1),
+        (a.1.0 * b.0.0 + a.1.1 * b.1.0, a.1.0 * b.0.1 + a.1.1 * b.1.1)
+    )
+}
+
 pub fn fib(n: i32) -> i32 {
-    // TODO: Implement the logic to calculate the nth Fibonacci number using matrix exponentiation
-    0 // Placeholder return value
+    // DONE: Implement the logic to calculate the nth Fibonacci number using matrix exponentiation
+    if n == 0 {
+        return 0;
+    }
+    let mut res = ((1, 0), (0, 1));
+    let mut acc = ((0, 1), (1, 1));
+    let mut n = n-1;
+    while n > 0 {
+        if n % 2 == 1 {
+            res = multiply(res, acc);
+        }
+        acc = multiply(acc, acc);
+        n >>= 1;
+    }
+    res.1.1
 }
 
 #[cfg(test)]
